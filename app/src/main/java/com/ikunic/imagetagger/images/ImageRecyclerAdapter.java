@@ -1,6 +1,9 @@
 package com.ikunic.imagetagger.images;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Rect;
+import android.media.ThumbnailUtils;
 import android.support.v7.widget.RecyclerView;
 import android.text.Layout;
 import android.view.LayoutInflater;
@@ -17,10 +20,11 @@ import java.util.List;
  */
 public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdapter.ViewHolder> {
 
-    private List<Bitmap> mBitmaps;
+    private List<String> mBitmapPath;
+    private RecyclerView mRecyclerView;
 
-    public void ImageRecyclerAdapter(List<Bitmap> bitmaps){
-        mBitmaps=bitmaps;
+    public ImageRecyclerAdapter(List<String> bitmapPaths){
+        mBitmapPath=bitmapPaths;
     }
 
     @Override
@@ -32,13 +36,25 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.mImageView.setImageBitmap(mBitmaps.get(position));
+        Rect scrollBounds=new Rect();
+        mRecyclerView.getHitRect(scrollBounds);
+        if(holder.mImageView.getLocalVisibleRect(scrollBounds)){
+            Bitmap image=BitmapFactory.decodeFile(mBitmapPath.get(position));
+            Bitmap thumbnail= ThumbnailUtils.extractThumbnail(image,20,20);
+            holder.mImageView.setImageBitmap(thumbnail);
+        }
+
     }
 
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView=recyclerView;
+    }
 
     @Override
     public int getItemCount() {
-        return mBitmaps.size();
+        return mBitmapPath.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {

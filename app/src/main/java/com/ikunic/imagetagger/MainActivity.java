@@ -33,20 +33,22 @@ public class MainActivity extends AppCompatActivity {
             //ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.READ_EXTERNAL_STORAGE);
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
         }
+        List<String> imageList=new ArrayList<>();
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PermissionChecker.PERMISSION_GRANTED){
             Cursor cr = this.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    new String[]{MediaStore.Images.Media.DATA,
-                            MediaStore.Images.Media._ID,
+                    new String[]{MediaStore.Images.Media.DATA
+                            /*MediaStore.Images.Media._ID,
                             MediaStore.Images.ImageColumns.TITLE,
                             MediaStore.Images.ImageColumns.DESCRIPTION,
-                            MediaStore.Images.ImageColumns.DATE_TAKEN},
+                            MediaStore.Images.ImageColumns.DATE_TAKEN*/},
                     null
                     , null, null);
 
-            List<Bitmap> imageList=new ArrayList<>();
+
             if(cr.moveToFirst()){
                 do{
-                    imageList.add(BitmapFactory.decodeFile(cr.getString(cr.getColumnIndex(MediaStore.Images.Media.DATA))));
+                    imageList.add(cr.getString(cr.getColumnIndex(MediaStore.Images.Media.DATA)));
+                    //imageList.add(BitmapFactory.decodeFile(cr.getString(cr.getColumnIndex(MediaStore.Images.Media.DATA))));
                 } while (cr.moveToNext());
                 Log.e(TAG, imageList.size()+"");
             }
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView.LayoutManager manager=new GridLayoutManager(this,3);
         recycler.setLayoutManager(manager);
         recycler.setItemAnimator(new DefaultItemAnimator());
-        recycler.setAdapter(new ImageRecyclerAdapter());
+        recycler.setAdapter(new ImageRecyclerAdapter(imageList));
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
