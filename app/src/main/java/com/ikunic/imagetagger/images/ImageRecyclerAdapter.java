@@ -38,11 +38,9 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
     public void onBindViewHolder(ViewHolder holder, int position) {
         Rect scrollBounds=new Rect();
         mRecyclerView.getHitRect(scrollBounds);
-        if(holder.mImageView.getLocalVisibleRect(scrollBounds)){
-            Bitmap image=BitmapFactory.decodeFile(mBitmapPath.get(position));
-            Bitmap thumbnail= ThumbnailUtils.extractThumbnail(image,20,20);
-            holder.mImageView.setImageBitmap(thumbnail);
-        }
+        Bitmap image=BitmapFactory.decodeFile(mBitmapPath.get(position));
+        Bitmap thumbnail= ThumbnailUtils.extractThumbnail(image,20,20);
+        holder.mImageView.setImageBitmap(thumbnail);
 
     }
 
