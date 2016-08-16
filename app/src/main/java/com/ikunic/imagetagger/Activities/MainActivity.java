@@ -1,9 +1,7 @@
-package com.ikunic.imagetagger;
+package com.ikunic.imagetagger.activities;
 
 import android.Manifest;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -16,6 +14,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.ikunic.imagetagger.R;
 import com.ikunic.imagetagger.images.ImageRecyclerAdapter;
 
 import java.util.ArrayList;
@@ -24,17 +23,44 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private ImageRecyclerAdapter mAdapter;
+    private List<String> mImageList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED){
+
+        RecyclerView recycler = (RecyclerView) findViewById(R.id.recycler_master);
+        RecyclerView.LayoutManager manager = new GridLayoutManager(this, 3);
+        recycler.setLayoutManager(manager);
+        recycler.setItemAnimator(new DefaultItemAnimator());
+        mAdapter = new ImageRecyclerAdapter(mImageList, MainActivity.this);
+        recycler.setAdapter(mAdapter);
+        refreshImageList();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        refreshImageList();
+    }
+
+    private void refreshImageList() {
+        mImageList.clear();
+        mImageList.addAll(getImageList());
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @NonNull
+    private List<String> getImageList() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED) {
             //ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.READ_EXTERNAL_STORAGE);
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},0);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
         }
-        List<String> imageList=new ArrayList<>();
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PermissionChecker.PERMISSION_GRANTED){
+        List<String> imageList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PermissionChecker.PERMISSION_GRANTED) {
             Cursor cr = this.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     new String[]{MediaStore.Images.Media.DATA
                             /*MediaStore.Images.Media._ID,
@@ -45,31 +71,26 @@ public class MainActivity extends AppCompatActivity {
                     , null, null);
 
 
-            if(cr.moveToFirst()){
-                do{
+            if (cr.moveToFirst()) {
+                do {
                     imageList.add(cr.getString(cr.getColumnIndex(MediaStore.Images.Media.DATA)));
                     //imageList.add(BitmapFactory.decodeFile(cr.getString(cr.getColumnIndex(MediaStore.Images.Media.DATA))));
                 } while (cr.moveToNext());
-                Log.e(TAG, imageList.size()+"");
+                Log.e(TAG, imageList.size() + "");
             }
         }
-
-
-        RecyclerView recycler= (RecyclerView) findViewById(R.id.recycler_master);
-        RecyclerView.LayoutManager manager=new GridLayoutManager(this,3);
-        recycler.setLayoutManager(manager);
-        recycler.setItemAnimator(new DefaultItemAnimator());
-        recycler.setAdapter(new ImageRecyclerAdapter(imageList));
+        return imageList;
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
+        switch (requestCode) {
             case 0:
-                if(grantResults.length>0 && grantResults[0]==PermissionChecker.PERMISSION_GRANTED){
-                    Log.e(TAG,"Rawas, permission milali");
-                }
-                else {
-                    Log.e(TAG,"Oops, no permission. Better Luck next time");
+                if (grantResults.length > 0 && grantResults[0] == PermissionChecker.PERMISSION_GRANTED) {
+                    Log.e(TAG, "Permission got");
+                    refreshImageList();
+                } else {
+                    Log.e(TAG, "Oops, no permission. Better Luck next time");
                 }
         }
     }
