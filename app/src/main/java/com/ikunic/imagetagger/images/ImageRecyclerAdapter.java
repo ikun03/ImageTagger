@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.support.v7.widget.RecyclerView;
 import android.text.Layout;
@@ -47,10 +48,48 @@ public class ImageRecyclerAdapter extends RecyclerView.Adapter<ImageRecyclerAdap
 //        Bitmap thumbnail= ThumbnailUtils.extractThumbnail(image,20,20);
 //        holder.mImageView.setImageBitmap(thumbnail);
 
-        holder.mImageView.setImageBitmap(BitmapFactory.decodeResource(mContext.getResources(),android.R.drawable.ic_menu_gallery));
-        ImageDecodeAsyncTask task=new ImageDecodeAsyncTask(holder.mImageView);
-        task.execute(mBitmapPath.get(position));
+        //Original Implementation
+//        holder.mImageView.setImageBitmap(BitmapFactory.decodeResource(mContext.getResources(),android.R.drawable.ic_menu_gallery));
+//        ImageDecodeAsyncTask task=new ImageDecodeAsyncTask(holder.mImageView);
+//        task.execute(mBitmapPath.get(position));
 
+        loadBitmap(mBitmapPath.get(position),holder.mImageView);
+
+    }
+
+    private void loadBitmap(String imagePath, ImageView imageView) {
+        if(cancelPotentialWork(imagePath,imageView)){
+            final ImageDecodeAsyncTask task=new ImageDecodeAsyncTask(imageView);
+            final AsyncDrawable asyncDrawable=new AsyncDrawable(task,mContext.getResources(),BitmapFactory.decodeResource(mContext.getResources(),android.R.drawable.ic_menu_gallery));
+            imageView.setImageDrawable(asyncDrawable);
+            task.execute(imagePath);
+        }
+    }
+
+    private boolean cancelPotentialWork(String imagePath, ImageView imageView) {
+        final ImageDecodeAsyncTask imageDecodeAsyncTask=getImageDecodeAsyncTask(imageView);
+
+        if(imageDecodeAsyncTask!= null){
+            final String imageDecodeData=imageDecodeAsyncTask.mImagePath;
+            if(imageDecodeData==""||imageDecodeData!=imagePath){
+                imageDecodeAsyncTask.cancel(true);
+            }
+            else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static ImageDecodeAsyncTask getImageDecodeAsyncTask(ImageView imageView) {
+        if(imageView!=null){
+            final Drawable drawable=imageView.getDrawable();
+            if(drawable instanceof AsyncDrawable){
+                final AsyncDrawable asyncDrawable= (AsyncDrawable) drawable;
+                return asyncDrawable.getImageDecodeAsyncTask();
+            }
+        }
+        return null;
     }
 
     @Override

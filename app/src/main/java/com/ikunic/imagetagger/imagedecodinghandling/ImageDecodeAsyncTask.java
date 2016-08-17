@@ -6,6 +6,8 @@ import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
 import android.widget.ImageView;
 
+import com.ikunic.imagetagger.images.ImageRecyclerAdapter;
+
 import java.lang.ref.WeakReference;
 
 /**
@@ -14,6 +16,7 @@ import java.lang.ref.WeakReference;
 public class ImageDecodeAsyncTask extends AsyncTask<String,Void,Bitmap> {
 
     private final WeakReference<ImageView> mImageViewWeakReference;
+    public String mImagePath;
 
     public ImageDecodeAsyncTask(ImageView imageView){
         mImageViewWeakReference= new WeakReference<>(imageView);
@@ -21,6 +24,7 @@ public class ImageDecodeAsyncTask extends AsyncTask<String,Void,Bitmap> {
 
     @Override
     protected Bitmap doInBackground(String... strings) {
+        mImagePath=strings[0];
         Bitmap image= BitmapFactory.decodeFile(strings[0]);
         Bitmap thumbnail= ThumbnailUtils.extractThumbnail(image,150,150);
         return thumbnail;
@@ -28,9 +32,13 @@ public class ImageDecodeAsyncTask extends AsyncTask<String,Void,Bitmap> {
 
     @Override
     protected void onPostExecute(Bitmap bitmap) {
+        if(isCancelled()){
+            bitmap=null;
+        }
         if(mImageViewWeakReference!=null && bitmap!=null){
             final ImageView imageView=mImageViewWeakReference.get();
-            if(imageView!=null){
+            final ImageDecodeAsyncTask imageDecodeAsyncTask= ImageRecyclerAdapter.getImageDecodeAsyncTask(imageView);
+            if(this== imageDecodeAsyncTask||imageView!=null){
                 imageView.setImageBitmap(bitmap);
             }
         }
